@@ -20,6 +20,7 @@ resource "azurerm_resource_group" "RG" {
 #####################
 
 resource "azurerm_role_assignment" "access-role" {
+  count = var.email ? 1 : 0
   scope = local.scope
   role_definition_name = "Owner"
   principal_id = data.azuread_user.user.id
@@ -39,13 +40,13 @@ resource "azurerm_virtual_network" "vnet" {
 #############
 ## subnets ## 
 #############
-resource "azurerm_subnet" "subnet1" {
+resource "azurerm_subnet" "cloud-subnet" {
   name = "${var.name}-cloud-subnet"
   resource_group_name = azurerm_resource_group.RG.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes = ["${cidrsubnet(var.address_space, 4, 0)}"]
 }
-resource "azurerm_subnet" "subnet2" {
+resource "azurerm_subnet" "on-premise-subnet" {
   name = "${var.name}-onpremise-subnet"
   resource_group_name = azurerm_resource_group.RG.name
   virtual_network_name = azurerm_virtual_network.vnet.name
@@ -126,4 +127,51 @@ resource "azurerm_mssql_firewall_rule" "source_ip" {
 resource "azurerm_data_factory_integration_runtime_self_hosted" "on-prem-data-source" {
   name = "${var.name}-self-hosted-IR"
   data_factory_id = azurerm_data_factory.data-factory.id
+}
+#####################
+## virtual machine ##
+#####################
+resource "azurerm_virtual_machine" "on-premise-vm" {
+  name = "${var.name}-VM"
+  location = local.region
+  resource_group_name = azurerm_resource_group.RG.name
+  vm_size = "Standard_B2ms"
+  network_interface_ids = [azurerm_network_interface.net-interface.id]
+
+  storage_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer = "WindowsServer"
+    sku = "2019-Datacenter"
+    version = "latest"
+  }
+
+  storage_os_disk {
+    name = "${var.name}-OS-disk"
+    managed_disk_type = "Standard_LRS"
+    create_option = "Attach"
+  }
+
+  os_profile {
+    computer_name = "${var.name}-onPrem"
+    admin_username = "win-admin"
+    admin_password = var.password
+  }
+}
+resource "azurerm_public_ip" "public-ip" {
+  name = "${var.name}-public-ip"
+  resource_group_name = azurerm_resource_group.RG.name
+  location = local.region
+  allocation_method = "Dynamic"
+}
+resource "azurerm_network_interface" "net-interface" {
+  name = "${var.name}-network-interface"
+  location = local.region
+  resource_group_name = azurerm_resource_group.RG.name
+  
+  ip_configuration {
+    name = "on-premise-ip-config"
+    subnet_id = azurerm_subnet.on-premise-subnet.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id = azurerm_public_ip.public-ip.name
+  }
 }

@@ -2,8 +2,11 @@ variable "name" {
   default = "testing-deployment"
 }
 variable "email" {
-  default = "admin2@landonbabayoutlook.onmicrosoft.com"
+  default = "landon.babay@outlook.com"
 }
-variable "landons-ip" {
+variable "users-source-ip" {
   default = "4.56.34.34"
+}
+variable "address_space" {
+  default = "10.100.0.0/20"
 }
