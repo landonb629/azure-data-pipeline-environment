@@ -1,8 +1,8 @@
 # Project: Azure Hybrid data pipeline development environment
 
-### What is this?
+### Project motivations 
 
-I recently looked into using azure data factory to move, and transform data from on-premise SQL server into Azure SQL database. After that, I wanted to write terraform that would spin up a development environment that simiulates an on-premise SQL server, an Azure SQL database, and Azure data factory.
+I was asked to do a demo for an ETL pipeline from on-premise to Azure SQL databases. Initially, The environment was setup manually but, I didn't want to incur the costs for the infrastructure so, I decided to write the environment with Terraform.
 
 The virtual machine that is deployed is acting as an on-premise server, in order to utilize this in azure data factory, do the following: 
 - install SQL server developer edition
@@ -35,7 +35,7 @@ When deploying resources with this repo, you need to have the following:
 ### What variables should you supply?
 - name: This will be the name of the deployment, a good example would be "Mikes-dev-environment"
 - email: This is the email of a valid user in your azure tenant, this is used to assign owner permissions to the resource group
-- source_ip_address: the public IP address, this address will be added to the firewall, and network security group 
+- source_ip_address: your public IP address, this address will be added to the firewall, and network security group 
 - address_space: the address space that you would like your vnet to have (can be left null)
 
 ### How to deploy resources with this repo
